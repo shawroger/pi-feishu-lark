@@ -125,5 +125,6 @@ OMP 里管理桥接：
 
 - `index.ts`：守护进程启动参数去掉 `--no-extensions`（omp 在 `--no-extensions` 下会连显式 `-e` 路径一起丢弃，导致插件根本没加载）；`looksLikeFeishuDaemon` 改按 `--mode rpc` + 扩展路径匹配（原来要求 pi 旧 flag `--no-builtin-tools`，omp 已改名 `--no-tools`，导致守护进程清理永远失效）。
 - `conversation-manager.ts`：删除 pi 时代的 `session.bindExtensions({})`（omp 已移除该方法，扩展绑定改在 `createAgentSession` 内部按 `disableExtensionDiscovery` 处理）；这是收到消息后回复 `OMP error: session.bindExtensions is not a function` 的根因。
+- `conversation-manager.ts`：适配 omp 改过的 `SessionManager.open` 签名——第三个参数由旧版的 `cwdOverride`（字符串）改成了 `storage`，且方法由同步变为异步。旧写法 `SessionManager.open(file, undefined, workspaceCwd)` 会把工作区路径当成 `storage` 传进去，触发 `storage.readText is not a function`，导致 gateway「已连接、一发消息就崩溃断开」。改为 `await SessionManager.open(file)`（cwd 仍由 `createAgentSession({ cwd: workspaceCwd })` 保证），并把读取会话工作区的 `getWorkspaceFromSessionFile` 改成 `async` 后 `await` 调用。
 - `gateway-lock.ts`：锁文件路径由硬编码 `~/.pi/agent/locks.json` 改为 `getAgentDir()/locks.json`，让守护进程与主程序共用同一把锁。
 - `cards.ts` / `message-handler.ts` / `rich-text.ts` / `conversation-manager.ts`：面向用户的文案 `Pi` → `OMP`。

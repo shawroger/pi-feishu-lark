@@ -386,7 +386,7 @@ export class ConversationManager {
     const { authStorage, modelRegistry } = await this.ensureRegistry();
     const model = selected ? modelRegistry.find(selected.provider, selected.id) : undefined;
     const sessionManager = existingFile && existsSync(existingFile)
-      ? SessionManager.open(existingFile, undefined, workspaceCwd)
+      ? await SessionManager.open(existingFile)
       : SessionManager.create(workspaceCwd);
 
     const feishuExtra = "You are replying through Feishu/Lark. Keep answers concise and readable in chat. Do not use markdown tables.";
@@ -436,7 +436,7 @@ export class ConversationManager {
   }
 
   private async findSessionInfo(sessionPath: string): Promise<SessionInfo | undefined> {
-    const currentWorkspace = this.getWorkspaceFromSessionFile(sessionPath);
+    const currentWorkspace = await this.getWorkspaceFromSessionFile(sessionPath);
     const localSessions = currentWorkspace ? await SessionManager.list(currentWorkspace) : [];
     const normalizedTarget = this.normalizeSessionPath(sessionPath);
     const fromLocal = localSessions.find((item) => this.normalizeSessionPath(item.path) === normalizedTarget);
@@ -445,9 +445,9 @@ export class ConversationManager {
     return allSessions.find((item) => this.normalizeSessionPath(item.path) === normalizedTarget);
   }
 
-  private getWorkspaceFromSessionFile(sessionPath: string) {
+  private async getWorkspaceFromSessionFile(sessionPath: string) {
     try {
-      return SessionManager.open(sessionPath).getCwd();
+      return (await SessionManager.open(sessionPath)).getCwd();
     } catch {
       return undefined;
     }
