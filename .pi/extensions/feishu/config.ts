@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync, chmodSync, rmSync } from "node:fs";
-import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import type { CardActionMode, Domain, FeishuConfig, GroupPolicy } from "./types.js";
 
-export const ROOT_DIR = join(homedir(), ".pi", "agent", "feishu");
+export const ROOT_DIR = join(getAgentDir(), "feishu");
 export const CONFIG_PATH = join(ROOT_DIR, "config.json");
 export const STATE_PATH = join(ROOT_DIR, "state.json");
 export const DEBUG_LOG_PATH = join(ROOT_DIR, "debug.log");
