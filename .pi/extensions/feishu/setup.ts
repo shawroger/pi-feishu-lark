@@ -105,11 +105,11 @@ async function registerFeishuApp(ctx: ExtensionCommandContext): Promise<{ appId:
       qrcode.generate(info.url, { small: true }, (qr) => {
         console.log("\n飞书/Lark 授权二维码 / Feishu/Lark authorization QR code");
         console.log(qr);
-        console.log(info.url);
+        console.log(`\n🔗 授权链接 / Authorization URL:\n${info.url}\n`);
         console.log(`二维码 ${info.expireIn} 秒后过期 / QR code expires in ${info.expireIn} seconds.`);
       });
       ctx.ui.notify(
-        "请在终端扫描二维码，或打开终端中显示的链接。 / Scan the QR code in terminal, or open the link printed there.",
+        `请扫描二维码或打开链接完成授权（${info.expireIn}s 过期）:\n${info.url}`,
         "info",
       );
     },
