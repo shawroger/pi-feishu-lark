@@ -1,10 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import { debugLog } from "./debug.js";
 
 const LOCK_KEY = "pi-feishu-lark.feishu-gateway";
-const LOCKS_PATH = join(homedir(), ".pi", "agent", "locks.json");
+const LOCKS_PATH = join(getAgentDir(), "locks.json");
 const LOCK_STALE_MS = 30_000;
 const LOCK_RETRY_MS = 25;
 const LOCK_ATTEMPTS = 40;

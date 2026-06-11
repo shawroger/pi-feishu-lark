@@ -108,7 +108,7 @@ export class FeishuMessageHandler {
       const message = error instanceof Error ? error.message : String(error);
       debugLog("feishu.handler.error", { messageId: msg.messageId, error: message });
       await markFeishuMessage(msg.messageId, "failed", message);
-      await this.getTransport()?.replyText(msg.messageId, `Pi error: ${message}`);
+      await this.getTransport()?.replyText(msg.messageId, `OMP error: ${message}`);
     }
   }
 
@@ -129,7 +129,7 @@ export class FeishuMessageHandler {
     if (command.name === "model") {
       const models = await this.conversations.getAvailableModels();
       if (!models.length) {
-        await transport.replyText(msg.messageId, "当前没有可用模型。请先在 Pi 里完成模型登录或 API Key 配置。");
+        await transport.replyText(msg.messageId, "当前没有可用模型。请先在 OMP 里完成模型登录或 API Key 配置。");
         return true;
       }
       const currentModel = await this.conversations.getSelectedModel(key);

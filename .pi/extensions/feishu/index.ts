@@ -240,7 +240,6 @@ export default function feishuExtension(pi: ExtensionAPI) {
     const piBin = process.env.PI_BIN || "omp";
     const args = [
       "--mode", "rpc",
-      "--no-extensions",
       "--no-skills",
       "--no-rules",
       "--no-tools",
@@ -541,10 +540,7 @@ function listProcesses() {
 }
 
 function looksLikeFeishuDaemon(command: string, extensionPath?: string) {
-  const hasDaemonFlags = command.includes("--mode rpc")
-    && command.includes("--no-extensions")
-    && command.includes("--no-builtin-tools");
-  if (!hasDaemonFlags) return false;
+  if (!command.includes("--mode rpc")) return false;
   if (extensionPath) return command.includes(extensionPath);
   return command.includes("feishu/index.ts");
 }

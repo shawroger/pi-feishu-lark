@@ -106,7 +106,7 @@ export class ConversationManager {
           await withTimeout(
             session.prompt(userText, images.length ? { images } : undefined),
             180_000,
-            "Pi 模型处理超时，请稍后重试；如果是图片消息，可以先切换到明确支持图片的模型。",
+            "OMP 模型处理超时，请稍后重试；如果是图片消息，可以先切换到明确支持图片的模型。",
           );
         } catch (error) {
           if (run.stopped) {
@@ -128,7 +128,7 @@ export class ConversationManager {
       const message = error instanceof Error ? error.message : String(error);
       debugLog("feishu.prompt.error", { key, error: message });
       await status?.finish("failed", message);
-      await onReply(`Pi error: ${message}`);
+      await onReply(`OMP error: ${message}`);
     });
     this.queues.set(key, next);
     await next;
@@ -177,7 +177,7 @@ export class ConversationManager {
       writeJson(STATE_PATH, this.state);
       await onReply("已创建新会话。旧会话历史已保留，下一条消息会从新上下文开始。");
     }).catch(async (error) => {
-      await onReply(`Pi error: ${error instanceof Error ? error.message : String(error)}`);
+      await onReply(`OMP error: ${error instanceof Error ? error.message : String(error)}`);
     });
     this.queues.set(key, next);
     await next;
@@ -253,7 +253,7 @@ export class ConversationManager {
         "下一条消息会继续接着这个会话往下聊。",
       ].join("\n"));
     }).catch(async (error) => {
-      await onReply(`Pi error: ${error instanceof Error ? error.message : String(error)}`);
+      await onReply(`OMP error: ${error instanceof Error ? error.message : String(error)}`);
     });
     this.queues.set(key, next);
     await next;
@@ -279,7 +279,7 @@ export class ConversationManager {
       this.sessions.delete(key);
       await onReply(`已切换到 ${provider}/${modelId}。当前飞书会话后续都会使用这个模型。`);
     }).catch(async (error) => {
-      await onReply(`Pi error: ${error instanceof Error ? error.message : String(error)}`);
+      await onReply(`OMP error: ${error instanceof Error ? error.message : String(error)}`);
     });
     this.queues.set(key, next);
     await next;
@@ -311,9 +311,9 @@ export class ConversationManager {
       delete this.state.sessions[key];
       this.state.workspaces![key] = workspace;
       writeJson(STATE_PATH, this.state);
-      await onReply(`已切换到工作区：${workspace}\n下一条消息会在这个目录里创建新的 Pi 会话。`);
+      await onReply(`已切换到工作区：${workspace}\n下一条消息会在这个目录里创建新的 OMP 会话。`);
     }).catch(async (error) => {
-      await onReply(error instanceof Error ? error.message : `Pi error: ${String(error)}`);
+      await onReply(error instanceof Error ? error.message : `OMP error: ${String(error)}`);
     });
     this.queues.set(key, next);
     await next;
@@ -413,7 +413,6 @@ export class ConversationManager {
       else process.env[CHILD_SESSION_ENV] = previousChildEnv;
     }
 
-    await session.bindExtensions({});
     this.bridge?.attachSession(key, session.sessionId);
     session.subscribe((event) => {
       this.activeRuns.get(key)?.status?.updateFromEvent(event);
