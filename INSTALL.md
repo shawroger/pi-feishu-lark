@@ -8,19 +8,20 @@
 
 ## 1. 从 GitHub 安装
 
+**全新安装**（机器上还没装过 `pi-feishu-lark`）：
+
 ```bash
 omp plugin install github:shawroger/pi-feishu-lark
 ```
 
-如果之前装过 npm 版的 `pi-feishu-lark`（`~/.omp/plugins/package.json` 里是 `"pi-feishu-lark": "^0.2.1"`），改用本分支需要强制覆盖：
+**从 npm 版切换到本分支**：如果之前装过 npm 版（`~/.omp/plugins/package.json` 里是 `"pi-feishu-lark": "^0.2.1"`），**必须先卸载再装**，不能直接装 GitHub 版——否则会报 bun `DependencyLoop` 错误（本分支 `version` 仍是 `0.2.1`，与 npm 的 `^0.2.1` 范围撞车，被当成自依赖）：
 
 ```bash
 omp plugin uninstall pi-feishu-lark
 omp plugin install github:shawroger/pi-feishu-lark
-# 或：omp plugin install github:shawroger/pi-feishu-lark --force
 ```
 
-装好后 `~/.omp/plugins/package.json` 里应是 `"pi-feishu-lark": "github:shawroger/pi-feishu-lark"`。插件源码是 TypeScript，由 omp 直接加载，**无需编译**——仓库里提交的就是运行的代码。
+装好后 `~/.omp/plugins/package.json` 里应是 `"pi-feishu-lark": "github:shawroger/pi-feishu-lark"`。插件源码是 TypeScript，由 omp 直接加载,**无需编译**——仓库里提交的就是运行的代码。以后更新用 `omp plugin upgrade pi-feishu-lark` 重新拉取 master。
 
 ---
 
