@@ -237,15 +237,13 @@ export default function feishuExtension(pi: ExtensionAPI) {
 
   function daemonSpec() {
     const extensionPath = fileURLToPath(import.meta.url);
-    const piBin = process.env.PI_BIN || "pi";
+    const piBin = process.env.PI_BIN || "omp";
     const args = [
       "--mode", "rpc",
       "--no-extensions",
       "--no-skills",
-      "--no-prompt-templates",
-      "--no-themes",
-      "--no-context-files",
-      "--no-builtin-tools",
+      "--no-rules",
+      "--no-tools",
       "-e", extensionPath,
     ];
     return { extensionPath, piBin, args };
