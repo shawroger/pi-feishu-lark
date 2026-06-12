@@ -6,6 +6,7 @@ import { debugLog } from "./debug.js";
 import { conversationKey, conversationLabel, normalizeForDedupe, parseBotCommand, parseMessageInput, pruneRecentMap } from "./messages.js";
 import { TaskStatusCard } from "./task-status-card.js";
 import type { FeishuBridgeStore } from "./bridge-store.js";
+import { activeBind, enqueueInbox } from "./bind-store.js";
 import type { FeishuTransport } from "./transport.js";
 import type { FeishuMessage } from "./types.js";
 
@@ -67,6 +68,24 @@ export class FeishuMessageHandler {
 
       if (this.isDuplicateContent(msg, key, text, parsed.attachments)) {
         await markFeishuMessage(msg.messageId, "ignored");
+        return;
+      }
+
+      // 已绑定前台终端会话：把纯文本消息转发给前台进程注入处理，daemon 不再自起独立会话。
+      // 带附件的消息回落到 daemon 独立会话，避免丢内容。
+      const bind = activeBind();
+      if (bind && !parsed.attachments.length) {
+        enqueueInbox(bind.pid, {
+          messageId: msg.messageId,
+          chatId: msg.chatId,
+          chatType: msg.chatType,
+          sessionKey: key,
+          replyToMessageId: msg.messageId,
+          text,
+          enqueuedAt: Date.now(),
+        });
+        debugLog("feishu.forward.enqueued", { messageId: msg.messageId, key, pid: bind.pid });
+        await markFeishuMessage(msg.messageId, "replied");
         return;
       }
 

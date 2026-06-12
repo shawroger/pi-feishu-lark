@@ -15,6 +15,7 @@ import { runSetup, uiConfirm } from "./setup.js";
 import { buildTaskStatusCard, parseStopTaskActionValue } from "./task-status-card.js";
 import { BotUnavailableError, FeishuTransport } from "./transport.js";
 import type { FeishuConfig, FeishuStatus } from "./types.js";
+import { ForegroundFeishuBridge } from "./foreground-bridge.js";
 
 export default function feishuExtension(pi: ExtensionAPI) {
   if (process.env[CHILD_SESSION_ENV] === "1") {
@@ -28,6 +29,7 @@ export default function feishuExtension(pi: ExtensionAPI) {
   const bridge = new FeishuBridgeRuntime(bridgeStore, delivery);
   const conversations = new ConversationManager(process.cwd(), bridge);
   const messageHandler = new FeishuMessageHandler(conversations, () => transport, bridgeStore);
+  const foreground = new ForegroundFeishuBridge((content, options) => pi.sendUserMessage(content, options));
 
   const STATUS_KEY = "feishu-connection";
   const STATUS_REFRESH_MS = 2_000;
@@ -108,6 +110,10 @@ export default function feishuExtension(pi: ExtensionAPI) {
 
   pi.on("message_end", async (event, ctx) => {
     bridge.handleMessageEnd(ctx.sessionManager.getSessionId(), undefined, event.message);
+    foreground.noteAssistant(event.message);
+  });
+  pi.on("agent_end", async () => {
+    await foreground.flushReply();
   });
 
   async function start(config?: FeishuConfig, options: { takeover?: boolean } = {}) {
@@ -321,12 +327,22 @@ export default function feishuExtension(pi: ExtensionAPI) {
   }
 
   pi.registerCommand("feishu", {
-    description: "Feishu/Lark: setup, start, stop, restart, status, debug, autostart, reset",
+    description: "Feishu/Lark: setup, start, stop, restart, status, debug, autostart, bind, unbind, reset",
     handler: async (args, ctx) => {
       uiRef = ctx.ui as any;
       const [cmdRaw] = args.trim().toLowerCase().split(/\s+/, 1);
       const cmd = cmdRaw || "status";
       try {
+        if (cmd === "bind") {
+          foreground.bind(ctx.sessionManager.getSessionId(), ctx.cwd);
+          ctx.ui.notify("已绑定当前终端会话：飞书消息会注入这里、共享上下文，回复自动发回飞书。发送 /feishu unbind 解除。", "info");
+          return;
+        }
+        if (cmd === "unbind") {
+          foreground.unbind();
+          ctx.ui.notify("已解除绑定：飞书消息恢复由后台独立会话处理。", "info");
+          return;
+        }
         if (cmd === "setup") {
           const configToStart = await runSetup(ctx);
           if (configToStart) {
@@ -399,6 +415,7 @@ export default function feishuExtension(pi: ExtensionAPI) {
             [
               `Status: ${lastStatusText || (loadConfig() ? "Feishu: disconnected" : "Feishu: not configured")}`,
               `Gateway owner: ${formatOwner(owner)}`,
+              `Forward bind: ${foreground.bound ? "已绑定当前终端会话" : "未绑定"}`,
               `Config: ${cfg ? `${cfg.domain}, appId=${mask(cfg.appId)}, groupPolicy=${cfg.groupPolicy}, autoStart=${cfg.autoStart !== false}` : "missing"}`,
               `Path: ${CONFIG_PATH}`,
               `Gateway lock: ${gatewayLockPath()}`,
@@ -430,7 +447,7 @@ export default function feishuExtension(pi: ExtensionAPI) {
           refreshStatusFromState();
           return;
         }
-        ctx.ui.notify("可用命令：/feishu setup | start | stop | restart | status | debug | autostart | reset", "info");
+        ctx.ui.notify("可用命令：/feishu setup | start | stop | restart | status | debug | autostart | bind | unbind | reset", "info");
       } catch (error) {
         ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");
       }
@@ -467,6 +484,7 @@ export default function feishuExtension(pi: ExtensionAPI) {
   pi.on("session_shutdown", async () => {
     await stop();
     clearStatus();
+    foreground.dispose();
   });
 }
 

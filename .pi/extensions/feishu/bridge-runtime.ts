@@ -118,7 +118,7 @@ export class FeishuBridgeRuntime {
   }
 }
 
-function extractText(message: any) {
+export function extractText(message: any) {
   const content = message.content;
   if (typeof content === "string") return content.trim();
   if (!Array.isArray(content)) return "";

@@ -210,6 +210,8 @@ Windows PATH 加入 C:\Program Files\Git\bin
 | `/feishu stop`      | 停止飞书桥接              |
 | `/feishu restart`   | 重启桥接，并重新加载最新代码和配置   |
 | `/feishu status`    | 查看连接状态、当前 owner 和配置 |
+| `/feishu bind`      | 绑定飞书到当前终端会话，共享上下文   |
+| `/feishu unbind`    | 解除绑定               |
 | `/feishu autostart` | 开关自动启动              |
 | `/feishu debug`     | 查看最近 20 条调试日志       |
 | `/feishu reset`     | 清除配置和映射，但保留会话历史     |
